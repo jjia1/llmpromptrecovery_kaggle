@@ -227,7 +227,8 @@ merged_model= PeftModel.from_pretrained(base_model, new_model)
 merged_model= merged_model.merge_and_unload()
 
 # Save the merged model
-merged_model.save_pretrained(f"merged_mistral_prompt_recovery",safe_serialization=True)
-tokenizer.save_pretrained(f"merged_mistral_prompt_recovery")
+model_name = f"merged_mistral_prompt_recovery_model_{now}"
+merged_model.save_pretrained(model_name, safe_serialization=True)
+tokenizer.save_pretrained(model_name)
 tokenizer.pad_token = tokenizer.eos_token
 tokenizer.padding_side = "right"
