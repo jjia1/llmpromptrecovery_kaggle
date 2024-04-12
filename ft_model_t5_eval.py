@@ -45,11 +45,12 @@ def get_completion_merged(input_text: str, output_text: str, model, tokenizer) -
     encodeds = tokenizer(prompt, return_tensors="pt", add_special_tokens=True)
     model_inputs = encodeds.to(device)
     generated_ids = model.generate(**model_inputs, max_new_tokens=100, do_sample=True, pad_token_id=tokenizer.eos_token_id)
-    #decoded = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
+    decoded = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
     # Get prompt length to remove the prepended prompt from the output
-    prompt_length = model_inputs.shape[1]
-    print(prompt_length)
-    decoded = tokenizer.batch_decode(generated_ids[0][prompt_length:], skip_special_tokens=True)
+    #TODO: Implement some trimming of the inputs so only get predicted prompt tokens. idea vvv
+    #prompt_length = model_inputs.shape[1]
+    #print(prompt_length)
+    #decoded = tokenizer.batch_decode(generated_ids[0][prompt_length:], skip_special_tokens=True)
     return decoded[0]
 
 
