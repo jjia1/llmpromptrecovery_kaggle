@@ -2,4 +2,4 @@
 
 Team repository for kaggle competition. Have less than two weeks to put this together. Run with mpi_run script.
 
-Brady, Sasi, Kai-Li, Thanos, Ilia
+JJ Version
