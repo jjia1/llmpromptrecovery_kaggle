@@ -1,3 +1,4 @@
 .env
 prompts/
 mpi_run_wrapper.sh
+old/
