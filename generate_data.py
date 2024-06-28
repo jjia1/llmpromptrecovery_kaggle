@@ -6,18 +6,25 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from datasets import load_dataset
 import json
 import random
+import os
+from dotenv import load_dotenv
+
+hf_access_token = os.getenv('HF_TOKEN')
+
 # Set the device to GPU if available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Getting model and tokenizer
 model_id = "google/gemma-7b-it"
-tokenizer = AutoTokenizer.from_pretrained(model_id)
+tokenizer = AutoTokenizer.from_pretrained(model_id, 
+                                    token=hf_access_token)
 
 model = AutoModelForCausalLM.from_pretrained(
     model_id,
     device_map="auto",
     torch_dtype=torch.bfloat16,
-    attn_implementation="flash_attention_2"
+    #attn_implementation="flash_attention_2",
+    token = hf_access_token
 )
 
 dataset = load_dataset("blog_authorship_corpus")
@@ -117,12 +124,18 @@ rewrite_inst = [
 ]
 
 # Randomly sample 10000 texts from the dataset
-sampled_texts = random.sample(texts, 10000)
+sampled_texts = random.sample(texts, 500)
 
 # Initialize variables for batch processing
-batch_size = 1000
+batch_size = 50
 num_batches = len(sampled_texts) // batch_size
-output_path = '/home/matthewn/kaggle/llm_prompt_recovery/'
+output_path = '/home/johnathanj/kaggle/llmpromptrecovery/llm_prompt_recovery/prompts/'
+# Check if the directory exists, and create it if it doesn't
+if not os.path.exists(output_path):
+    os.makedirs(output_path)
+    print(f"Directory '{output_path}' created.")
+else:
+    print(f"Directory '{output_path}' already exists.")
 count = 0
 
 for batch_idx in range(num_batches):
@@ -143,7 +156,7 @@ for batch_idx in range(num_batches):
 
         # Tokenize the prompt
         input_ids = tokenizer(prompt, return_tensors="pt").input_ids.to(device)
-        # Get length of prompt
+         # Get length of prompt
         prompt_length = input_ids.shape[1]
         # Generate output using the model
         output = model.generate(input_ids, do_sample=True, max_new_tokens=4000, pad_token_id=tokenizer.eos_token_id, temperature=temperature)
@@ -172,54 +185,3 @@ for batch_idx in range(num_batches):
         json.dump(json_list, file)
 
 print(f"Processing completed. {num_batches} JSON files generated.")
-
-
-
-
-
-# Previous code...
-
-## Assuming you have already loaded the dataset and defined the 'rewrite_inst' list
-#
-## Extract the 'text' column from the dataset
-#texts = dataset['train']['text']
-#
-## Iterate over the texts and generate output for each one
-#json_list = []
-#for original_text in texts:
-#    # Randomly sample a rewrite instruction from 'rewrite_inst'
-#    rewrite_instruction = random.choice(rewrite_inst)
-#    
-#    # Construct the prompt by prepending the rewrite instruction to the original text
-#    prompt = rewrite_instruction + ' ' + original_text
-#    
-#    # Randomly select a temperature value
-#    temperature = random.choice([0.1, 0.5, 1.0])
-#    
-#    # Tokenize the prompt
-#    input_ids = tokenizer(prompt, return_tensors="pt").input_ids.to(device)
-#    # Get length of prompt
-#    prompt_length = input_ids.shape[1]
-#    # Generate output using the model
-#    output = model.generate(input_ids, do_sample=True, max_length=2000, pad_token_id=tokenizer.eos_token_id, temperature=temperature)
-#    
-#    # Decode the generated output
-#    rewritten_text = tokenizer.decode(output[0][prompt_length:], skip_special_tokens=True)
-#    
-#    # Create a JSON object with the original text, prompt, and rewritten text
-#    json_data = {
-#        "original_text": original_text,
-#        "prompt": rewrite_instruction,
-#        "rewritten_text": rewritten_text
-#    }
-#    
-#    # Convert the JSON object to a string
-#    json_string = json.dumps(json_data)
-#    
-#    # Append the JSON string to the list
-#    json_list.append(json_string)
-#
-## Write the list of JSON strings to a file
-#output_path = '/home/matthewn/kaggle/llm_prompt_recovery/'
-#with open(output_path + 'training_data.json', 'w') as file:
-#    json.dump(json_list, file)
